@@ -10,6 +10,7 @@ library(DiagrammeR)
 library(shiny)
 library(dplyr)
 library(DT)
+library(openxlsx)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
@@ -19,12 +20,14 @@ shinyServer(function(input, output, session) {
   toListen <- reactive({
     list(input$ageIncludeNA, input$feverIncludeNA,input$age,input$feverDays,input$KDfeatures,input$MisCfeatures,input$raisedInflamMarkers,input$othercause,input$covid19,
          input$inflam,input$phenotypes,input$treatments,input$cardiac,
-         input$CRPLimit,input$PCTLimit,input$tropLimit,input$BNPLimit,input$ddimerLimit,input$ptLimit,input$zScoreLimit)
+         input$CRPLimit,input$PCTLimit,input$tropLimit,input$BNPLimit,input$ddimerLimit,input$ptLimit,input$zScoreLimit,
+         input$hasConsent,input$naConsent,input$pax,input$edta,input$smart,input$throat,input$alreadyRNA)
   })
   
   # filtering function
   
     filteredDF <- read.csv("data/finalCovidPims.csv")
+    RNAseqList <- read.xlsx("data/Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
     observeEvent(toListen(),{
       
 
@@ -192,6 +195,42 @@ shinyServer(function(input, output, session) {
       
       filteredDF <- filteredDF %>% filter(Phenotype1 %in% input$phenotypes)
       filteredDF <- filteredDF %>% filter(grepl(paste(input$treatments,collapse = "|"), treatments))
+      
+      if(input$hasConsent & input$naConsent){
+      
+        filteredDF <- filteredDF %>% filter(hasConsent %in% c("YES","EMPTY"))
+          
+      } else if(input$hasConsent){
+        filteredDF <- filteredDF %>% filter(hasConsent =="YES")
+      } else if(input$naConsent){
+        filteredDF <- filteredDF %>% filter(hasConsent =="EMPTY")
+      }
+      
+      
+      if(input$pax){
+        filteredDF <- filteredDF %>% filter(PAX =="YES")
+      }
+      
+      if(input$smart){
+        filteredDF <- filteredDF %>% filter(SMART =="YES")
+      }
+      
+      if(input$edta){
+        filteredDF <- filteredDF %>% filter(EDTA %in% c("2HRS","6HRS"))
+      }
+      
+      if(input$throat){
+        filteredDF <- filteredDF %>% filter(THROAT =="YES")
+      }
+      
+      
+      if(input$alreadyRNA =="Y"){
+        filteredDF <- filteredDF %>% filter(ID %in% RNAseqList$Patient.ID |
+                                ID %in% RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20)
+      } else if(input$alreadyRNA=="N"){
+        filteredDF <-filteredDF %>% filter(!(ID %in% RNAseqList$Patient.ID |
+                                ID %in% RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20))
+      }
       
       
       

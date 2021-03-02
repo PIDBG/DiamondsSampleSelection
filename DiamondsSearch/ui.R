@@ -10,13 +10,15 @@ library(DiagrammeR)
 library(shiny)
 library(DT)
 library(dplyr)
+library(openxlsx)
+
 
 
 covidPims <- read.csv("data/finalCovidPims.csv")
 filterable <- covidPims[,c(3:21)]
 treatments <- c("ANTIBIOTIC", "ANTIVIRATL","IMMUNOGLOBULIN","STEROID","ANTIMALARIAL","MONOCLONAL_AB","OTHER","STUDY_TREATMENT")
 
-# Define UI for application that draws a histogram
+# Define UI for application 
 shinyUI(fluidPage(
 
    
@@ -48,7 +50,26 @@ shinyUI(fluidPage(
             checkboxGroupInput("covid19","Covid19 Positivity, any of:",c("PCR","IgG","IgM","Previous History","COVID19 Listed in Microbiology Section")),
             checkboxGroupInput("inflam", "Inflammatory Status, any of:", c("Inflammatory Phenotype","Covid-Related Inflammation","Any Inflammatory Syndrome", "Recieved IVIG")),
             checkboxGroupInput("phenotypes","Include the following (primary) phenotypes: ", levels(as.factor(covidPims$Phenotype1)), selected = levels(as.factor(covidPims$Phenotype1))),
-            checkboxGroupInput("treatments", "Only include patients who recieved one of the following treatments", treatments)
+            checkboxGroupInput("treatments", "Only include patients who recieved one of the following treatments", treatments),
+            
+            h4("Consent"),
+            checkboxInput("hasConsent", "Has Consent", value = TRUE),
+            checkboxInput("naConsent", "Consent not Entered on DB"),
+            
+            h4("Samples"),
+            checkboxInput("pax", "PAX Sample", value = TRUE),
+            checkboxInput("edta","EDTA Sample"),
+            checkboxInput("smart", "SMART tube"),
+            checkboxInput("throat", "Throat Swab"),
+            
+            h4("Already Had RNA Seq"),
+            radioButtons("alreadyRNA",
+                         label = "Already Had RNA Seq",
+                         choiceNames = c("Unfiltered","Yes","No"),
+                         choiceValues = c("U","Y","N"))
+            
+            
+            
             
             
         ),
