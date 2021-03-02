@@ -31,12 +31,13 @@ shinyUI(fluidPage(
     sidebarLayout(
         sidebarPanel(
             h2("Filters"),
-            checkboxInput("ageIncludeNA", "Include Patients where Age Can't Be Calculated"),
+            checkboxInput("ageIncludeNA", "Include Patients where Age Can't Be Calculated", value = T),
             sliderInput("age","Age Range", value = c(0,110),min=0,max=110),
-            checkboxInput("feverIncludeNA", "Include Patients where Fever Length Can't Be Calculated"),
+            checkboxInput("feverIncludeNA", "Include Patients where Fever Length Can't Be Calculated", value = T),
             sliderInput("feverDays", "Days of Fever >=", value = 0, min = 0, max = 10, step=1),
             
             
+            checkboxInput("partial","Include Patients with Missing Data"),
             radioButtons("KDfeatures", ">=4 KD Features",
                          choiceNames = c("NA", "Yes", "No"),
                          choiceValues = c("null","yes","no")),
@@ -44,25 +45,25 @@ shinyUI(fluidPage(
                         choiceNames = c("NA","Yes", "No"),
                         choiceValues = c("null","yes","no")),
             
+            
             checkboxInput("raisedInflamMarkers","Raised CRP / PCT"),
             checkboxInput("cardiac","Zscore > Limit"),
             checkboxGroupInput("othercause","Exclude Other Microbial Cause of Inflammation:",c("Viral","Bacterial","Other")),
             checkboxGroupInput("covid19","Covid19 Positivity, any of:",c("PCR","IgG","IgM","Previous History","COVID19 Listed in Microbiology Section")),
             checkboxGroupInput("inflam", "Inflammatory Status, any of:", c("Inflammatory Phenotype","Covid-Related Inflammation","Any Inflammatory Syndrome", "Recieved IVIG")),
             checkboxGroupInput("phenotypes","Include the following (primary) phenotypes: ", levels(as.factor(covidPims$Phenotype1)), selected = levels(as.factor(covidPims$Phenotype1))),
-            checkboxGroupInput("treatments", "Only include patients who recieved one of the following treatments", treatments),
+            checkboxGroupInput("treatments", "Only include patients who the selected treatments (If none selected, do not filter based on treatment)", treatments),
             
             h4("Consent"),
-            checkboxInput("hasConsent", "Has Consent", value = TRUE),
+            checkboxInput("hasConsent", "Has Consent"),
             checkboxInput("naConsent", "Consent not Entered on DB"),
             
             h4("Samples"),
-            checkboxInput("pax", "PAX Sample", value = TRUE),
+            checkboxInput("pax", "PAX Sample"),
             checkboxInput("edta","EDTA Sample"),
             checkboxInput("smart", "SMART tube"),
             checkboxInput("throat", "Throat Swab"),
             
-            h4("Already Had RNA Seq"),
             radioButtons("alreadyRNA",
                          label = "Already Had RNA Seq",
                          choiceNames = c("Unfiltered","Yes","No"),
@@ -95,6 +96,8 @@ shinyUI(fluidPage(
             
         )
     ),
+    
+    
     DT::dataTableOutput("finalTable")
 )
 )
