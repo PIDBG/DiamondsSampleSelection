@@ -19,7 +19,7 @@ filterable <- covidPims[,c(3:21)]
 treatments <- c("ANTIBIOTIC", "ANTIVIRATL","IMMUNOGLOBULIN","STEROID","ANTIMALARIAL","MONOCLONAL_AB","OTHER","STUDY_TREATMENT")
 
 # Define UI for application 
-shinyUI(fluidPage(
+ui <- fluidPage(
 
    
     
@@ -97,7 +97,9 @@ shinyUI(fluidPage(
         )
     ),
     
-    
+    div(style="text-align:center;position:relative;",
+        downloadButton("downloadFinalTable", "Download Table")
+        ),
     DT::dataTableOutput("finalTable")
 )
-)
+

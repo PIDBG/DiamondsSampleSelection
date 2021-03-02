@@ -12,7 +12,7 @@ library(dplyr)
 library(DT)
 library(openxlsx)
 # Define server logic required to draw a histogram
-shinyServer(function(input, output, session) {
+server <- function(input, output, session) {
 
   
   
@@ -392,6 +392,15 @@ shinyServer(function(input, output, session) {
                                 ID %in% RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20))
       }
       
+      output$downloadFinalTable <- downloadHandler(
+        filename = function() {
+          paste0("DiamondsFilteringDownload_",Sys.Date(), ".csv")
+        },
+        content = function(con){
+          write.csv(filteredDF,con)
+        }
+      )
+      
       
       
       output$finalTable <- DT::renderDataTable({
@@ -412,6 +421,5 @@ shinyServer(function(input, output, session) {
     #plotTable
     
  
-})
+}
 
-server <- function(){shinyServer()}
