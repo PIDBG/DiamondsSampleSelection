@@ -12,42 +12,19 @@ diamondsFilename <- "DIAMONDS_CONSORTIUM_EXTERNAL_SAMPLES_USE_FEB26.xlsx"
 
 #### import and intial qc  +  filtering  ####
 #import RNAseqList
-RNAseqList <- read.xlsx("RNAseq exp Feb 2021/Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
+RNAseqList <- read.xlsx("Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
 
 #add a 0 when format of id is -E1  so all have format -E01
 stri_sub(RNAseqList$Patient.ID[stri_sub(RNAseqList$Patient.ID,15,16)!="E0"],16,15) <- 0
 
 #import diamonds + perform export
 diamondsExport <- read.xlsx(diamondsFilename, detectDates = T)
-#performExport <- read.xlsx("BIVA_ED_OCT20_2020.xlsx", detectDates = T)
-
-
-#add a 0 when format of id is -E1  so all have format -E01
-#stri_sub(performExport$UNIQUE_PATIENT_ID[stri_sub(performExport$UNIQUE_PATIENT_ID,15,16)!="E0"],16,15) <- 0
-
-
-#bring in patients in wit DIS ids in jethros column
-#RNAseqList$Patient.ID2 <- RNAseqList$Patient.ID
-#RNAseqList[stri_sub(RNAseqList$Patient.ID,1,3)%in%"BIV" &
-#             stri_sub(RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20,1,3)%in%"DIS","Patient.ID2"] <- 
-#                                                                                        RNAseqList[stri_sub(RNAseqList$Patient.ID,1,3)%in%"BIV" &
-#                                                                                                   stri_sub(RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20,1,3)%in%"DIS","On.Jethro.clinical.diamonds.database.06_07_20"]
-#                                                                                      
-
-#filter diamonds export for those in RNAseqList
-
-#to use whole diamonds db - remove the filter here
-#diamondsExport <-diamondsExport[diamondsExport$UNIQUE_PATIENT_ID %in% RNAseqList$Patient.ID2,]
-
-#performInRNAseq <- performExport[performExport$UNIQUE_PATIENT_ID %in% RNAseqList$Patient.ID,]
 
 
 
 #### create variables for covidPims #####
 #new dataFrame for pims/covid recording
-covidPims <- data.frame(ID = c(diamondsExport$UNIQUE_PATIENT_ID#,
-                               #performInRNAseq$UNIQUE_PATIENT_ID
-                               ), 
+covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID, 
                         comments="",
                         ageYears = NA, feverLength = NA, rash = "", conj="", mucositis="",extremities="", lymphadenitis = "", 
                         shock = "", myocardialDysfunction = "",maxZscore=NA, coagulopathy = "",
@@ -114,19 +91,8 @@ covidPims <- data.frame(ID = c(diamondsExport$UNIQUE_PATIENT_ID#,
                                  "FIRST_MYOCARDITIS","FIRST_PERICARDITIS",
                                  "FIRST_VALVULAR_REGURGITATION","FIRST_FRACTIONAL_SHORTENING",
                                  "WORST_MYOCARDITIS","WORST_PERICARDITIS","WORST_VALVULAR_REGURGITATION",
-                                 "WORST_VALVULAR_REGURGITATION")]=="YES") #|
-          # any((diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],
-          #                  c("FIRST_ECHO_LOPEZ_Z_SCORE_1","FIRST_ECHO_LOPEZ_Z_SCORE_2",
-          #                    "WORST_ECHO_LOPEZ_Z_SCORE_1","WORST_ECHO_LOPEZ_Z_SCORE_2")]) >2.5 &
-          #     !(diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],
-          #                               c("FIRST_ECHO_LOPEZ_Z_SCORE_1","FIRST_ECHO_LOPEZ_Z_SCORE_2",
-          #                                  "WORST_ECHO_LOPEZ_Z_SCORE_1","WORST_ECHO_LOPEZ_Z_SCORE_2")])=="NULL") #|
-        # !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<15 | 
-        #   all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))
-        #   )|
-        # !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<500 | 
-        #   all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])) ))
-      )) {
+                                 "WORST_VALVULAR_REGURGITATION")]=="YES") 
+ )) {
         
         covidPims$myocardialDysfunction[i] <- "YES"
         
@@ -231,39 +197,7 @@ covidPims <- data.frame(ID = c(diamondsExport$UNIQUE_PATIENT_ID#,
          
       
     } 
-    #else if (covidPims$ID[i] %in% performInRNAseq$UNIQUE_PATIENT_ID) { #if patient in perform db
-  #     
-  #     #for perform samples in 2020#####
-  #     
-  #     #if also in diamonds db
-  #     if(length(stri_sub(RNAseqList[RNAseqList$Patient.ID %in% performInRNAseq$UNIQUE_PATIENT_ID[performInRNAseq$UNIQUE_PATIENT_ID == covidPims$ID[i] &
-  #                                                                                                as.Date(performInRNAseq$DATE_OF_SYMPTOM_ONSET)>as.Date("2020-01-01")], 
-  #                                   "Patient.ID2"],1,3))>0){
-  #             if (stri_sub(RNAseqList[RNAseqList$Patient.ID %in% performInRNAseq$UNIQUE_PATIENT_ID[performInRNAseq$UNIQUE_PATIENT_ID == covidPims$ID[i] &
-  #                                                                                         as.Date(performInRNAseq$DATE_OF_SYMPTOM_ONSET)>as.Date("2020-01-01")], 
-  #                                                                                         "Patient.ID2"],1,3)=="DIS") {
-  #                    covidPims$comments[i] <- paste("also in Diamonds DB, see: ",
-  #                                                   RNAseqList$Patient.ID2[RNAseqList$Patient.ID==covidPims$ID[i]])
-  #              } else if (stri_sub(RNAseqList[RNAseqList$Patient.ID %in% performInRNAseq$UNIQUE_PATIENT_ID[performInRNAseq$UNIQUE_PATIENT_ID == covidPims$ID[i] &
-  #                                                                                                 as.Date(performInRNAseq$DATE_OF_SYMPTOM_ONSET)>as.Date("2020-01-01")], 
-  #                                    "Patient.ID2"],1,3)=="BIV") {
-  #                     covidPims$comments[i] <- "Perform patient after 2020, not on Diamonds DB"
-  #             }
-  #     }
-  #     #calculate age at symptom onset in years
-  #     if(!(performInRNAseq$DATE_OF_SYMPTOM_ONSET[performInRNAseq$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c(NA,NULL,"NA","NULL") ||
-  #          performInRNAseq$DATE_OF_BIRTH[performInRNAseq$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c(NA,NULL,"NA","NULL"))){
-  #     covidPims$ageYears[i] <-
-  #       as.numeric((as.Date(performInRNAseq$DATE_OF_SYMPTOM_ONSET[performInRNAseq$UNIQUE_PATIENT_ID==covidPims$ID[i]]) - 
-  #                     as.Date(performInRNAseq$DATE_OF_BIRTH[performInRNAseq$UNIQUE_PATIENT_ID==covidPims$ID[i]]))/365)
-  #     }
-  #     
-  #     covidPims$Phenotype1[i] <- performInRNAseq$FINAL_PHENOTYPE_DIAGNOSIS[performInRNAseq$UNIQUE_PATIENT_ID == covidPims$ID[i]]
-  #     
-  #     covidPims$inflamSyndrome[i] <- performInRNAseq$INFLAMMATORY[performInRNAseq$UNIQUE_PATIENT_ID==covidPims$ID[i]]
-  #     
-  #   }
-  #   
+
   }
 
 # if unable to calculated fever length or age
