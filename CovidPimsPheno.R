@@ -8,7 +8,7 @@ library(readr)
 library(tidyr)
 library(dplyr)
 
-diamondsFilename <- "DIAMONDS_CONSORTIUM_EXTERNAL_SAMPLES_USE_FEB26.xlsx"
+diamondsFilename <- "diamondsexports/DIAMONDS_EXPORT_MARCH3.xlsx"
 
 #### import and intial qc  +  filtering  ####
 #import RNAseqList
@@ -509,4 +509,5 @@ write.csv(covidPims,file="finalCovidPims.csv")
 write.csv(covidPims,file="DiamondsSearch/data/finalCovidPims.csv")
 
 
+write.csv(covidPims %>% filter(hadRNASeq=="YES"), file = "covidPimsHadRNASeq.csv")
 
