@@ -10,6 +10,8 @@ library(dplyr)
 
 diamondsFilename <- "diamondsexports/DIAMONDS_EXPORT_MARCH3.xlsx"
 
+
+
 #### import and intial qc  +  filtering  ####
 #import RNAseqList
 RNAseqList <- read.xlsx("Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
@@ -19,8 +21,8 @@ stri_sub(RNAseqList$Patient.ID[stri_sub(RNAseqList$Patient.ID,15,16)!="E0"],16,1
 
 #import diamonds + perform export
 diamondsExport <- read.xlsx(diamondsFilename, detectDates = T)
-
-
+diamondsExport <- read_delim("diamondsExports/e2.txt", delim = "\t")
+diamondsExport <- as.data.frame(diamondsExport)
 
 #### create variables for covidPims #####
 #new dataFrame for pims/covid recording
@@ -77,7 +79,7 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
       ###hypotension/shock####
       covidPims$shock[i] <- 
         paste("shock = ",diamondsExport$SHOCK[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],
-              "; Inotropes = ", diamondsExport$INOTROPES_130[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]])
+              "; Inotropes = ", diamondsExport$INOTROPES[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]])
       
       #myocardial dysfunction####
       if(!all(is.na(diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],
@@ -107,36 +109,36 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
                                           "WORST_ECHO_LOPEZ_Z_SCORE_1","WORST_ECHO_LOPEZ_Z_SCORE_2")]), na.rm = T)
       }
       
-      if(!is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])))){
-        covidPims$Trop[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
+      if(!is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_19=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])))){
+        covidPims$Trop[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_19=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
       }else{covidPims$Trop[i] <- NA}      
       
-      if(!is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])))){
-        covidPims$BNP[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
+      if(!is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_22=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])))){
+        covidPims$BNP[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_22=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
       }else{covidPims$BNP[i] <- NA}
       
       
       #caogulopathy (pt/ptt/ddimer)#### 
       
       #if the max PT is > 15.8
-      if(all(!is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_30=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))){
-        if(max(parse_number((stri_split(diamondsExport$`TIME_POINT_30=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)>15.8) {
+      if(all(!is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_9=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))){
+        if(max(parse_number((stri_split(diamondsExport$`TIME_POINT_9=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)>15.8) {
             covidPims$coagulopathy[i] <- "YES"    
         } 
       }
       
       #if max D-dimer > 850
-      if(all(!is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_41=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))){
-        if(max(parse_number((stri_split(diamondsExport$`TIME_POINT_41=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)>850) {
+      if(all(!is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_20=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))){
+        if(max(parse_number((stri_split(diamondsExport$`TIME_POINT_20=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)>850) {
           covidPims$coagulopathy[i] <- "YES"    
         } 
       }
       
-      if(!all(is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_30=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]]))))){
-      covidPims$PT[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_30=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
+      if(!all(is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_9=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]]))))){
+      covidPims$PT[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_9=PT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
       }else{covidPims$PT[i] <- NA}
-      if(!all(is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_41=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]]))))){
-        covidPims$Ddimer[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_41=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
+      if(!all(is.na(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_20=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]]))))){
+        covidPims$Ddimer[i] <- max(as.numeric(sub(".*=","",stri_split(diamondsExport$`TIME_POINT_20=D_DIMER`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]])),na.rm = T)
       }else{covidPims$Ddimer[i] <- NA}      
       
       ## No APTT - ? need to add INR
@@ -152,8 +154,8 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
       covidPims$maxCRP[i] <- as.numeric(diamondsExport$MAXIMUM_CRP[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]])
       
       #PCT
-      if (!all(is.na(parse_number(stri_split(diamondsExport$`TIME_POINT_38=PCT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";")[[1]])))) {
-      covidPims$maxProcalc[i] <- max(parse_number(stri_split(diamondsExport$`TIME_POINT_38=PCT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";")[[1]]), na.rm = T)
+      if (!all(is.na(parse_number(stri_split(diamondsExport$`TIME_POINT_17=PCT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";")[[1]])))) {
+      covidPims$maxProcalc[i] <- max(parse_number(stri_split(diamondsExport$`TIME_POINT_17=PCT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";")[[1]]), na.rm = T)
       }
       #other microbial cause of inflammation####
       covidPims$bacteriaSpecify[i] <- diamondsExport$BACTERIA_SPECIFY[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]]
@@ -181,7 +183,7 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
         gsub("NULL|NULL;","",
              paste(unique(sub(".*=","",
                               stri_split(
-                                diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],"TIME_POINT_82=TREATMENT_NAME"], 
+                                diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],"TREATMENT_NAME"], 
                                 regex = ";")[[1]])), 
                    collapse=";"))
       
@@ -238,11 +240,11 @@ for (i in 1:nrow(covidPims)){
          !all(diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],
                                    c("FIRST_ECHO_LOPEZ_Z_SCORE_1","FIRST_ECHO_LOPEZ_Z_SCORE_2",
                                       "WORST_ECHO_LOPEZ_Z_SCORE_1","WORST_ECHO_LOPEZ_Z_SCORE_2")]%in% c(NA,NULL,"NULL"))) |
-     !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<15 |
-       all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_40=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))
+     !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_19=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<15 |
+       all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_19=TROP_T`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])))
        )|
-     !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<500 |
-       all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_43=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])) )))
+     !(max(parse_number((stri_split(diamondsExport$`TIME_POINT_22=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]]), na.rm = T)<500 |
+       all(is.na(parse_number((stri_split(diamondsExport$`TIME_POINT_22=BNP_NT`[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]], regex = ";"))[[1]])) )))
     {
     covidPims$misCFeatures[i] <- covidPims$misCFeatures[i] + 1
   }
@@ -393,14 +395,26 @@ for (i in 1:nrow(covidPims)){
            if(
              (!stri_split(diamondsExport$VIRUS_DETECTED[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]][
              which(!stri_split(diamondsExport$VIRUS_DETECTED[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]],regex = ";")[[1]]%in%"SARS-CoV-2")
-             ] %in%  "NULL") |
-    (!diamondsExport$BACTERIA_SPECIFY[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c("NULL",NULL,"NEGATIVE")) |
-    (!diamondsExport$PATHOGEN_SPECIFY[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c("NULL",NULL,"NEGATIVE"))
+             ] %in%  "NULL")
+  ){
+
+    if (covidPims$incidentalCovid[i] == "NO"){
+      covidPims$coinfectCovid[i] <- "YES"
+      otherorgs <- otherorgs + 1}
+  }
+  }
+  
+  if((!diamondsExport$BACTERIA_SPECIFY[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c("NULL",NULL,"NEGATIVE")) |
+         (!diamondsExport$PATHOGEN_SPECIFY[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c("NULL",NULL,"NEGATIVE"))
   ){
     covidPims$coinfectCovid[i] <- "YES"
-    if (covidPims$incidentalCovid[i] == "NO"){otherorgs <- otherorgs + 1}
+    
+    if (covidPims$incidentalCovid[i] == "NO"){
+      if(covidPims$coinfectCovid[i]=="NO"){ otherorgs <- otherorgs + 1}
+      covidPims$coinfectCovid[i] <- "YES"
+     }
   }
-  }
+  
   #if not incidental and not co-infect and  syndrome listed as covid19 and either dv or vs and not pims -> mark as uncomplicated covid.
   if(covidPims$incidentalCovid[i] == "NO" &
      covidPims$coinfectCovid[i] == "NO" &
