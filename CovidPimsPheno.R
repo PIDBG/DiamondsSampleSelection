@@ -8,7 +8,7 @@ library(readr)
 library(tidyr)
 library(dplyr)
 
-diamondsFilename <- "diamondsexports/DIAMONDS_EXPORT_MARCH3.xlsx"
+#diamondsFilename <- "diamondsexports/DIAMONDS_EXPORT_MARCH3.xlsx"
 
 
 
@@ -20,15 +20,16 @@ RNAseqList <- read.xlsx("Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
 stri_sub(RNAseqList$Patient.ID[stri_sub(RNAseqList$Patient.ID,15,16)!="E0"],16,15) <- 0
 
 #import diamonds + perform export
-diamondsExport <- read.xlsx(diamondsFilename, detectDates = T)
-diamondsExport <- read_delim("diamondsExports/e2.txt", delim = "\t")
+#diamondsExport <- read.xlsx(diamondsFilename, detectDates = T)
+diamondsExport <- read_delim("https://www.euclids-perform-diamonds-h2020.eu/media/e2.txt", delim = "\t")
 diamondsExport <- as.data.frame(diamondsExport)
 
+downloadDate <- format(Sys.Date(), "%d/%m/%Y")
 #### create variables for covidPims #####
 #new dataFrame for pims/covid recording
 covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID, 
                         comments="",
-                        ageYears = NA, feverLength = NA, rash = "", conj="", mucositis="",extremities="", lymphadenitis = "", 
+                        ageYears = 0, feverLength = 0, rash = "", conj="", mucositis="",extremities="", lymphadenitis = "", 
                         shock = "", myocardialDysfunction = "",maxZscore=NA, coagulopathy = "",
                         GI = "", maxCRP=NA, maxESR = NA, maxProcalc = NA, bacteriaSpecify = "", covid19Status = "", Phenotype1 = "",
                         Phenotype2 = "", pathogenSyndrome = "", inflamSyndrome = "")
@@ -44,7 +45,11 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
       covidPims$ageYears[i] <-
         as.numeric((as.Date(diamondsExport$DATE_SYMPTOM_ONSET[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]]) - 
                       as.Date(diamondsExport$DATE_OF_BIRTH[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]]))/365)
+      } else if (!diamondsExport$DATE_OF_BIRTH[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c(NA,NULL,"NA","NULL")){
+        covidPims$ageYears[i] <- as.numeric((Sys.Date() - as.Date(diamondsExport$DATE_OF_BIRTH[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]])))/365
+        
       }
+      
       
       #fever length####
       if (!(diamondsExport$DATE_FEVER_ONSET[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i]] %in% c(NA,NULL,"NA","NULL") ||
@@ -204,8 +209,8 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
 
 # if unable to calculated fever length or age
 
-covidPims[is.na(covidPims$ageYears) | covidPims$ageYears<0, "ageYears"] <- NA
-covidPims[is.na(covidPims$feverLength) | covidPims$feverLength<0, "ageYears"] <- NA
+covidPims[is.na(covidPims$ageYears) | covidPims$ageYears<0, "ageYears"] <-  NA
+covidPims[is.na(covidPims$feverLength) | covidPims$feverLength<0, "feverLength"] <- NA
 
 
 
@@ -516,6 +521,8 @@ covidPims[covidPims$ID %in% RNAseqList$Patient.ID |
 
 ######  export #####
 
+covidPims$downloadDate <- downloadDate
+
 
 write.csv(covidPims,file="finalCovidPims.csv")
 
@@ -525,3 +532,18 @@ write.csv(covidPims,file="DiamondsSearch/data/finalCovidPims.csv")
 
 write.csv(covidPims %>% filter(hadRNASeq=="YES"), file = "covidPimsHadRNASeq.csv")
 
+
+
+table(covidPims %>% filter(ageYears<19) %>% select(atypicalCovid))
+
+
+
+table(diamonds %>% select(DATE_OF_BIRTH))
+
+
+table((covidPims %>% filter(misC=="YES") %>% select(ID) %>% stri_sub(from = 5, to = 8)))
+
+
+table(covidPims %>% filter(misC=="YES" & hadRNASeq=="NO") %>% mutate(
+  site = str_sub(ID,5,8)
+) %>% select(site))

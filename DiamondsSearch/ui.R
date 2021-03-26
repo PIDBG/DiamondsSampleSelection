@@ -26,7 +26,7 @@ ui <- fluidPage(
     
     # Application title
     titlePanel("Diamonds Search COVID/MIS-C Filtering"),
-    h3("Using Diamonds Export From 15/3/21"),
+    h3(paste("Using Diamonds Export From: ", covidPims$downloadDate[1])),
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(

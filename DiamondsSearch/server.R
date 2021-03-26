@@ -16,7 +16,7 @@ server <- function(input, output, session) {
 
   
   
-    #listener
+    #listener 
   toListen <- reactive({
     list(input$ageIncludeNA, input$feverIncludeNA,input$age,input$feverDays,input$KDfeatures,input$MisCfeatures,
          input$partial,
@@ -29,6 +29,7 @@ server <- function(input, output, session) {
   # filtering function
   
     filteredDF <- read.csv("data/finalCovidPims.csv")
+    filteredDF <- subset(filteredDF,select = -downloadDate)
     RNAseqList <- read.xlsx("data/Batch_F_and_F_extension_noDELPHIC.xlsx", startRow = 2)
     observeEvent(toListen(),{
       
