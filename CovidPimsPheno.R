@@ -21,10 +21,13 @@ stri_sub(RNAseqList$Patient.ID[stri_sub(RNAseqList$Patient.ID,15,16)!="E0"],16,1
 
 #import diamonds + perform export
 #diamondsExport <- read.xlsx(diamondsFilename, detectDates = T)
-diamondsExport <- read_delim("https://www.euclids-perform-diamonds-h2020.eu/media/e2.txt", delim = "\t")
-diamondsExport <- as.data.frame(diamondsExport)
-
+GET(url="https://www.euclids-perform-diamonds-h2020.eu/media/DIAMONDS_DAILY_EXPORT.xlsx",
+    write_disk(tf <- tempfile(fileext = ".xlsx")))
+diamondsExport <- read_xlsx(tf)
+diamonsExport <- as.data.frame(diamondsExport)
 downloadDate <- format(Sys.Date(), "%d/%m/%Y")
+
+
 #### create variables for covidPims #####
 #new dataFrame for pims/covid recording
 covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID, 
@@ -37,6 +40,8 @@ covidPims <- data.frame(ID = diamondsExport$UNIQUE_PATIENT_ID,
 
 
   for (i in 1:nrow(covidPims)) {
+    diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],(is.na(diamondsExport[diamondsExport$UNIQUE_PATIENT_ID==covidPims$ID[i],] ))] <- "NULL"
+    
     if (covidPims$ID[i] %in% diamondsExport$UNIQUE_PATIENT_ID){ #if patient in diamonds db
       
       #calculate age at symptom onset in years####
