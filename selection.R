@@ -26,6 +26,7 @@ remove0 <- function(x){
 
 perform$UNIQUE_PATIENT_ID <- remove0(perform$UNIQUE_PATIENT_ID)
 diamonds$UNIQUE_PATIENT_ID <- remove0(diamonds$UNIQUE_PATIENT_ID)
+diamonds$ALTERNATE_STUDY_NO <- remove0(diamonds$ALTERNATE_STUDY_NO)
 RNAseqList$Patient.ID <- remove0(RNAseqList$`Patient ID`)
 RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20 <- remove0(RNAseqList$`On Jethro clinical diamonds database 06_07_20`)
 
@@ -736,7 +737,13 @@ forOxford <- function(selection,
                       PAXProcessTime,
                       ...){
   
-  if(hasConsent & (!PAX_TUBE_TP2 %in% "YES") & !hadRNASeq){
+  if(!hasConsent){
+    "No Consent"
+  } else if(hadRNASeq){
+    "Already Sequenced"
+  } else if(PAX_TUBE_TP2 %in% "YES"){
+    "Has TP2 sample"
+  } else{
     
     if(selection %in% "possible MisC"){
       "?"
@@ -753,7 +760,7 @@ forOxford <- function(selection,
       
     } else{""}
     
-  } else{""}
+  }
   
 }
 
@@ -864,9 +871,9 @@ selectionsDF <- diamonds %>% mutate(
                                       SEPSIS_SYNDROMES, UNDIFFERENTIATED_FEVER,
                                       OTHER_INFECTIONS,INFLAMMATORY,GIT,HAEMATOLOGICAL,
                                       OTHER_SYNDROMES_ICD10),
-              sep = "; ", na.rm = T, remove = F)
+              sep = "; ", na.rm = T, remove = F) %>%
 
-selectionsDF %<>% mutate(
+ mutate(
   
   fullMisC = if_else(
     InflammatoryPatient & (anyCovidPos|INFLAMMATORY %in% "COVID-RELATED INFLAMMATION") & paediatric & feverLength>=3 & raisedInflam & (!otherOrgs) & misCFeatures>=2,
@@ -923,19 +930,20 @@ selectionsDF %<>% mutate(
     FALSE
   ),
   
-  atypicalKD = if_else(
-    (!is.na(maxZscore)) & maxZscore >2.5,
-    TRUE,
-    FALSE
-  )
+  atypicalKD = if_else(t 5999)
   
-)
+) %>%
 
-selectionsDF %<>% mutate(
+ mutate(
     selection = case_when(
       fullMisC ~ "Full Mis-C Criteria",
       MiscCwithCoInfection ~ "MisC with Co-Infection",
-      OtherCovidInflam & (is.na(raisedInflam) | is.na(otherOrgs)) ~ "possible MisC",
+      OtherCovidInflam & (is.na(RASH) &
+                            is.na(CONJUNCTIVITIS) &
+                            is.na(INFLAMMED_EXTREMITIES) &
+                            is.na(MUCOSITIS) &
+                            is.na(SHOCK) &
+                            is.na(INOTROPES)) ~ "possible MisC",
       OtherCovidInflam ~ "Other Covid Inflammatory Disease",
       NonCovidInflammation ~ "Non-Covid Related Inflammatory Disease",
 
@@ -948,10 +956,9 @@ selectionsDF %<>% mutate(
       
       TRUE ~ NA_character_
     ),
-    ForOxford = "",
-    OxfordFirstPass = pmap_chr(.,forOxford)
+    ForOxford = ""
     
-)
+) %>% mutate( OxfordFirstPass = pmap_chr(.,forOxford))
 
 
 write_excel_csv(selectionsDF %>% select(UNIQUE_PATIENT_ID,selection, OxfordFirstPass, ForOxford,
