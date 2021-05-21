@@ -1,0 +1,12 @@
+Final Decision,Y,,,,,,
+,,,,,,,
+Count of Number of PAX TPs,Column Labels,,,,,,
+Row Labels,1,2,3,Grand Total,,,Number of Samples
+Atypical Covid,4,,,4,,,4
+Co-infection with Covid,3,,,3,,,3
+Full Mis-C Criteria,52,13,4,69,,,90
+MisC with Co-Infection,13,4,1,18,,,24
+Non-Covid Related Inflammatory Disease,19,,,19,,,19
+Other Covid Inflammatory Disease,11,2,,13,,,15
+Uncomplicated Covid,40,,,40,,,40
+Grand Total,142,19,5,166,,,195

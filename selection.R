@@ -4,6 +4,7 @@ library(httr)
 library(stringr)
 library(magrittr)
 
+#### Import DB ####
 
 perform <- read_xlsx("diamondsexports/BIVA_ED_OCT20_2020.xlsx")
 
@@ -553,6 +554,8 @@ aetiologyNegative <- c("NO=NULL","NO=NEGATIVE","NULL=NULL","Unk=NULL","Unk=NEGAT
 # 
 
 
+### Updating Diamonds Sample Info ####
+
 
 
 
@@ -764,10 +767,141 @@ forOxford <- function(selection,
   
 }
 
+immunoDateTime <- function(TREATMENT,
+                           TREATMENT_NAME,
+                           DATE_TIME_INVESTIGATIONS.1,
+                           ...){
+  
+  if(grepl("YES",TREATMENT) & 
+     !is.na(TREATMENT_NAME) &
+     !is.na(DATE_TIME_INVESTIGATIONS.1)){
+    treatmentStarted <- which(str_split(TREATMENT,";",simplify = T)[1,] %in% "YES")
+    paste((str_split(DATE_TIME_INVESTIGATIONS.1,";",simplify = T)[,c(treatmentStarted+1,treatmentStarted)]), collapse = " ")
+  } else {
+    NA_character_
+  }
+  
+}
+
+
+paxtoImuno <- function(TREATMENT,
+                        TREATMENT_NAME,
+                        DATE_TIME_INVESTIGATIONS.1,
+                        PAX_DATE_TIME,
+                        ...){
+  
+  if(grepl("YES",TREATMENT) & 
+     grepl("STEROID|IMMUNOGLOBULIN|MONOCLONAL_AB",TREATMENT_NAME) & 
+     (!is.na(PAX_DATE_TIME)) & (!is.na(DATE_TIME_INVESTIGATIONS.1)) & 
+     (!is.na(TREATMENT_NAME)) & 
+     (!is.na(TREATMENT))){
+  
+  treatmentStarted <- 2*(which(str_split(TREATMENT,";",simplify = T)[1,] %in% "YES"))
+  
+  Ix <- str_split(DATE_TIME_INVESTIGATIONS.1,";",simplify = T)[1,]
+  Ix<- Ix[!Ix %in% c(NA,NULL,"NA","NULL")]
+  
+  if(length(Ix) >= treatmentStarted){
+  
+  dateTreatment <- as.POSIXct(paste((Ix[c(treatmentStarted-1,treatmentStarted)]), collapse = " "))
+  
+  } else {
+    
+    dateTreatment <- as.POSIXct(paste((Ix[c(1,2)]), collapse = " "))
+    
+  }
+  
+  
+  as.numeric(difftime(dateTreatment, as.POSIXct(paste(str_split(PAX_DATE_TIME,";",simplify = T)[,1:2], collapse=" ")), units = "hours"))
+  
+  } else {NA_real_}
+  
+}
+
+serumtoImuno <- function(TREATMENT,
+                       TREATMENT_NAME,
+                       DATE_TIME_INVESTIGATIONS.1,
+                       SERUM_DATE_TIME,
+                       ...){
+  SERUM_DATE_TIME <- gsub("NULL;","",SERUM_DATE_TIME)
+  if(grepl("YES",TREATMENT) & 
+     grepl("STEROID|IMMUNOGLOBULIN|MONOCLONAL_AB",TREATMENT_NAME) & 
+     (!is.na(SERUM_DATE_TIME)) & (!is.na(DATE_TIME_INVESTIGATIONS.1)) & 
+     (!is.na(TREATMENT_NAME)) & 
+     (!is.na(TREATMENT))){
+    
+    treatmentStarted <- 2*(which(str_split(TREATMENT,";",simplify = T)[1,] %in% "YES"))
+    
+    Ix <- str_split(DATE_TIME_INVESTIGATIONS.1,";",simplify = T)[1,]
+    Ix<- Ix[!Ix %in% c(NA,NULL,"NA","NULL")]
+    
+    if(length(Ix) >= treatmentStarted){
+      
+      dateTreatment <- as.POSIXct(paste((Ix[c(treatmentStarted-1,treatmentStarted)]), collapse = " "))
+      
+    } else {
+      
+      dateTreatment <- as.POSIXct(paste((Ix[c(1,2)]), collapse = " "))
+      
+    }
+    
+    
+    as.numeric(difftime(dateTreatment, as.POSIXct(paste(str_split(SERUM_DATE_TIME,";",simplify = T)[,1:2], collapse=" ")), units = "hours"))
+    
+  } else {NA_real_}
+  
+}
+
+edtatoImuno <- function(TREATMENT,
+                       TREATMENT_NAME,
+                       DATE_TIME_INVESTIGATIONS.1,
+                       EDTA_DATE_TIME,
+                       ...){
+  EDTA_DATE_TIME <- gsub("NULL;","",EDTA_DATE_TIME)
+  
+  if(grepl("YES",TREATMENT) & 
+     grepl("STEROID|IMMUNOGLOBULIN|MONOCLONAL_AB",TREATMENT_NAME) & 
+     (!is.na(EDTA_DATE_TIME)) & (!is.na(DATE_TIME_INVESTIGATIONS.1)) & 
+     (!is.na(TREATMENT_NAME)) & 
+     (!is.na(TREATMENT))){
+    
+    treatmentStarted <- 2*(which(str_split(TREATMENT,";",simplify = T)[1,] %in% "YES"))
+    
+    Ix <- str_split(DATE_TIME_INVESTIGATIONS.1,";",simplify = T)[1,]
+    Ix<- Ix[!Ix %in% c(NA,NULL,"NA","NULL")]
+    
+    if(length(Ix) >= treatmentStarted){
+      
+      dateTreatment <- as.POSIXct(paste((Ix[c(treatmentStarted-1,treatmentStarted)]), collapse = " "))
+      
+    } else {
+      
+      dateTreatment <- as.POSIXct(paste((Ix[c(1,2)]), collapse = " "))
+      
+    }
+    
+    
+    as.numeric(difftime(dateTreatment, as.POSIXct(paste(str_split(EDTA_DATE_TIME,";",simplify = T)[,1:2], collapse=" ")), units = "hours"))
+    
+  } else {NA_real_}
+  
+}
+
+numberOfSamples <- function(PAX_TUBE_TP1,
+                            PAX_TUBE_TP2,
+                            PAX_TUBE_DIS,...){
+  
+  sum(c(PAX_TUBE_TP1,PAX_TUBE_TP2,PAX_TUBE_DIS) %in% "YES")
+
+}
 
 
 #### Add fields to DF ####
 selectionsDF <- diamonds %>% mutate(
+  
+
+  
+  numberOfSamples = pmap_dbl(., numberOfSamples)) %>% mutate(
     #See which diamonds samples are on the RNA seq list above
     hadRNASeq =if_else(
         diamonds$UNIQUE_PATIENT_ID %in% c(RNAseqList$Patient.ID,RNAseqList$On.Jethro.clinical.diamonds.database.06_07_20),
@@ -863,7 +997,9 @@ selectionsDF <- diamonds %>% mutate(
   cultureToSerum = as.integer(as.Date(str_split(SERUM_DATE_TIME,";",simplify=T)[,1]) - as.Date(str_split(CULTURE_DATE,";",simplify = T)[,1])),
   cultureToEDTA = as.integer(as.Date(str_split(EDTA_DATE_TIME,";",simplify=T)[,1]) - as.Date(str_split(CULTURE_DATE,";",simplify = T)[,1])),
   
-  
+  paxtoImmuno = pmap_dbl(., paxtoImuno),
+  serumtoImuno = pmap_dbl(., serumtoImuno),
+  edtatoImuno = pmap_dbl(., edtatoImuno)
   
 ) %>% unite ("syndromesConcat",c(CARDIOVASCULAR,LOWER_RESPIRATORY_TRACT,URTI_EAR_NOSE_THROAT,
                                       MUSCULOSKELETAL.1,NEUROLOGICAL,SURGICAL,
@@ -930,7 +1066,10 @@ selectionsDF <- diamonds %>% mutate(
     FALSE
   ),
   
-  atypicalKD = if_else(t 5999)
+  atypicalKD = if_else(
+    (!is.na(maxZscore)) & maxZscore >2.5,
+    TRUE,
+    FALSE)
   
 ) %>%
 
@@ -961,94 +1100,79 @@ selectionsDF <- diamonds %>% mutate(
 ) %>% mutate( OxfordFirstPass = pmap_chr(.,forOxford))
 
 
-write_excel_csv(selectionsDF %>% select(UNIQUE_PATIENT_ID,selection, OxfordFirstPass, ForOxford,
-                        age,GENDER,ETHNICITY_REPORTED,
-                        FINAL_PHENOTYPE_DIAGNOSIS,SECONDARY_PHENOTYPE,syndromesConcat,
-                        otherOrgs,`VIRUS_AETIOLOGY=VIRUS_DETECTED`,`BACTERIA_AETIOLOGY=BACTERIA_SPECIFY`,PATHOGEN_DETECTED,
-                        `SAMPLE_TYPE_1=CULTURE_RESULT`, 
-                        hasConsent,hadRNASeq,
-                        classicalKD,atypicalKD,
-                        samplesAvailable,
-                        PAXProcessTime,SerumProcessTime,EDTAProcesTime,
-                        contains("admissionto"),contains("firstIx"), contains("cultureTo"),
-                        EDTA_ALLIQUOT,SMART_TUBE,STORAGE_LOCATION,
-                        PAX_TUBE_TP1,PAX_TUBE_TP2,PAXgene_TYPE,COMMENTS_4,
-                        SERUM_100,SERUM_250,COMMENTS_8
-                        ), file = "ForSelection.csv")
 
+selectionsDF %>% 
+  mutate(paxBeforeImmuno = case_when(
+    is.na(paxtoImmuno) ~ NA,
+    paxtoImmuno < 0 ~ FALSE,
+    paxtoImmuno >=0 ~ TRUE,
+    TRUE ~ NA
+  )) %>%
+  select(UNIQUE_PATIENT_ID,SITE_CODE,selection, OxfordFirstPass, ForOxford,
+         age,GENDER,ETHNICITY_REPORTED, `COMORBIDITIY=COMORBIDITIY_SPECIFY`, 
+         FINAL_PHENOTYPE_DIAGNOSIS,SECONDARY_PHENOTYPE,syndromesConcat,samplesAvailable,
+         paxBeforeImmuno,paxtoImmuno,samplesAvailable,
+         otherOrgs,`VIRUS_AETIOLOGY=VIRUS_DETECTED`,`BACTERIA_AETIOLOGY=BACTERIA_SPECIFY`,PATHOGEN_DETECTED,
+         `SAMPLE_TYPE_1=CULTURE_RESULT`,
+         numberOfSamples, PAXProcessTime,SerumProcessTime,EDTAProcesTime,
+         contains("admissionto"),contains("firstIx"), contains("cultureTo"),
+         EDTA_ALLIQUOT,SMART_TUBE,STORAGE_LOCATION,
+         PAX_TUBE_TP1,PAX_TUBE_TP2,PAXgene_TYPE,COMMENTS_4,
+         SERUM_100,SERUM_250,COMMENTS_8) -> new 
 
-nestedSelections <- selectionsDF %>% filter(!is.na(selection)) %>%
-  select(UNIQUE_PATIENT_ID, SITE_CODE,
-         age, GENDER, ETHNICITY_REPORTED,
-         DATETIME_FIRST_HOSPITAL,hasConsent,hadRNASeq,
-         `VIRUS_AETIOLOGY=VIRUS_DETECTED`,`BACTERIA_AETIOLOGY=BACTERIA_SPECIFY`,
-         syndromesConcat,FINAL_PHENOTYPE_DIAGNOSIS,SECONDARY_PHENOTYPE,
-         PAX_TIME_TO_PROCESS,SERUM_TIME_TO_PROCESSS,EDTA_TIME_TO_PROCESS,THROAT_SWAB,
-         otherOrgs,
-         selection,classicalKD,atypicalKD) %>%
-  group_by(selection) %>% 
-  nest() %>% 
-  mutate(
-n = map_int(data, ~{nrow(.x)}),
-hasConsentandNotSequenced = map_int(data, ~{nrow(.x %>% filter(hasConsent & !hadRNASeq))}),
+write_excel_csv(new,paste0("Selection/Diamondsselection_", paste(Sys.Date()) ,".csv"))
 
-PCRpos = map_int(data, ~{nrow(.x %>% filter(covidPCRPos))}),
-otherPos = map_int(data, ~{nrow(.x %>% filter(anyCovidPos & !covidPCRPos))}),
-
-DB = map_int(data, ~{nrow(.x %>% filter(FINAL_PHENOTYPE_DIAGNOSIS=="DEFINITE BACTERIAL"))}),
-DV = map_int(data, ~{nrow(.x %>% filter(FINAL_PHENOTYPE_DIAGNOSIS=="DEFINITE VIRAL"))}),
-
-classicalKD = map_int(data, ~{nrow(.x %>% filter(classicalKD))}),
-atypicalKD = map_int(data, ~{nrow(.x %>% filter(atypicalKD))}),
-
-
-
-syndromeCRI = map_int(data, ~{nrow(.x %>% filter(grepl("COVID-RELATED",syndromesConcat)))}),
-syndromeCRICoi = map_int(data, ~{nrow(.x %>% filter(grepl("COVID-RELATED",syndromesConcat) & otherOrgs))})
-)
-  
-
-View(nestedSelections)
-write_excel_csv(selectionsDF %>% filter(!is.na(selection)) %>%
-  select(UNIQUE_PATIENT_ID, SITE_CODE, selection, age, GENDER, ETHNICITY_REPORTED,
-         DATETIME_FIRST_HOSPITAL,hasConsent,hadRNASeq,
-         `VIRUS_AETIOLOGY=VIRUS_DETECTED`,`BACTERIA_AETIOLOGY=BACTERIA_SPECIFY`,
-         syndromesConcat,FINAL_PHENOTYPE_DIAGNOSIS,SECONDARY_PHENOTYPE,
-         PAXgene_TYPE,PAX_TIME_TO_PROCESS,
-         SERUM_TIME_TO_PROCESSS,
-         EDTA_TIME_TO_PROCESS,
-         THROAT_SWAB,
-         classicalKD,atypicalKD), file="DiamondsSelection.csv")
-
-
-
-##########
-
-
-covidNest <- covidPims %>% mutate(
-  site = str_sub(ID, 5,8)
-) %>%
-  group_by(site) %>%
-  nest()
-
-covidNest %<>% mutate(
-  noConsent = map_int(data, ~{nrow(.x %>% filter(hasConsent=="NO"& ageYears<=18))}),
-  cantCalcAge = map_int(data, ~{nrow(.x %>% filter(is.na(ageYears) & hasConsent!="NO"& ageYears<=18))}),
-  noHadRNASeq  =map_int(data, ~{nrow(.x %>% filter(hadRNASeq=="YES"& ageYears<=18))}),
-  numberCOVIDAny = map_int(data, ~{nrow(.x %>% filter(!grepl(c("NEGATIVE","NULL"),covid19Status)))}),
-  COVIDPCR = map_int(data, ~{nrow(.x %>% filter(grepl("PCR",covid19Status)))}),
-  numberMisC = map_int(data, ~{nrow(.x %>% filter(misC=="YES" & hadRNASeq=="NO"& ageYears<=18))}),
-  otherCovidRelatedInflam = map_int(data, ~{nrow(.x %>% filter(otherCovidInflam=="YES" & hadRNASeq=="NO"& ageYears<=18))}),
-  incidental = map_int(data, ~{nrow(.x %>% filter(incidentalCovid=="YES" & hadRNASeq=="NO"& ageYears<=18))}),
-  coinfect = map_int(data, ~{nrow(.x %>% filter(ageYears<=18 & hadRNASeq=="NO" & coinfectCovid=="YES"))}),
-  atypical = map_int(data, ~{nrow(.x %>% filter(atypicalCovid=="YES" & hadRNASeq=="NO"& ageYears<=18))}),
-  uncomplicated = map_int(data, ~{nrow(.x %>% filter(uncomplicatedCovid=="YES" & hadRNASeq=="NO" & ageYears<=18))})
-)
-
-View(covidNest)
-
-
-covidNest %>% filter(uncomplicated>0) %>%
-  unnest(cols = c(data)) %>% filter(uncomplicatedCovid=="YES")
-
-
+# 
+# ##### updating selection #####
+# updateNumber <- function(UNIQUE_PATIENT_ID...1,...5,...){
+#   
+#   if(is.na(...5)){
+#     
+#     if(new$numberOfSamples[new$UNIQUE_PATIENT_ID==UNIQUE_PATIENT_ID...1]==0){1} else{
+#     new$numberOfSamples[new$UNIQUE_PATIENT_ID==UNIQUE_PATIENT_ID...1]
+#     } 
+#   } else {...5}
+#   
+# }
+# 
+# 
+# originalSelection <- read_csv("FinalSelectionOxford.csv")
+# 
+# originalSelection %<>% rename(UNIQUE_PATIENT_ID = UNIQUE_PATIENT_ID...1)
+# 
+# new$EDTA_ALLIQUOT <- as.double(new$EDTA_ALLIQUOT)
+# 
+# combined <- full_join(originalSelection, new)
+# 
+# table(combined %>% filter(SITE_CODE=="1601") %>% select(selection))
+# 
+# write_csv(combined, file = "Selection/combinedSelection2.csv")
+# 
+# 
+# finalselection <-  read_xlsx("Selection/combinedSelection2.xlsx", sheet = 2)
+# 
+# finalselection$PAX_DATE_TIME <- "Not On DB"
+# for(i in 1:nrow(finalselection)){
+#   
+#   if(finalselection$UNIQUE_PATIENT_ID...1[i] %in% selectionsDF$UNIQUE_PATIENT_ID){
+#   if(!is.na(selectionsDF$PAX_DATE_TIME[selectionsDF$UNIQUE_PATIENT_ID %in% finalselection$UNIQUE_PATIENT_ID...1[i]])){
+#   finalselection$PAX_DATE_TIME[i] <- selectionsDF$PAX_DATE_TIME[selectionsDF$UNIQUE_PATIENT_ID %in% finalselection$UNIQUE_PATIENT_ID...1[i]]
+#   }
+#   }
+# }
+# 
+# write.xlsx(finalselection %>% filter(!duplicated(UNIQUE_PATIENT_ID...1)), file = "Selection/finalSelection.xlsx")
+# 
+# finalselection <-  read_xlsx("Selection/finalSelection.xlsx", sheet = 1)
+# 
+# finalselection$Alternative_ID <- ""
+# for(i in 1:nrow(finalselection)){
+#   
+#   if(finalselection$UNIQUE_PATIENT_ID...1[i] %in% selectionsDF$UNIQUE_PATIENT_ID){
+#     if(!is.na(selectionsDF$ALTERNATE_STUDY_NO[selectionsDF$UNIQUE_PATIENT_ID %in% finalselection$UNIQUE_PATIENT_ID...1[i]])){
+#       finalselection$Alternative_ID[i] <- selectionsDF$ALTERNATE_STUDY_NO[selectionsDF$UNIQUE_PATIENT_ID %in% finalselection$UNIQUE_PATIENT_ID...1[i]]
+#     }
+#   }
+# }
+# 
+# write.xlsx(finalselection %>% filter(!duplicated(UNIQUE_PATIENT_ID...1)), file = "Selection/finalSelection2.xlsx")
