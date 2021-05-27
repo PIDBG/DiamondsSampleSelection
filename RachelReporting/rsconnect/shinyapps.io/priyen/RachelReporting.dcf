@@ -1,0 +1,12 @@
+name: RachelReporting
+title: RachelReporting
+username:
+account: priyen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4176680
+bundleId: 4633214
+url: https://priyen.shinyapps.io/RachelReporting/
+when: 1621861532.65348
+asMultiple: FALSE
+asStatic: FALSE
